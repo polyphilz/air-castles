@@ -90,15 +90,24 @@ def main():
     posts = get_posts()
     if not posts:
         print("Failed to build Worker Script - Notion API database query error")
-        return
+        raise
 
     # Create the URL slug to Notion page ID mappings for each post
     slugs_to_page_ids = create_slugs_to_page_ids_dict(posts["results"])
+    # If this dictionary only has the base slug, then the assumption is that
+    # something went wrong (because there should always be posts)
+    if len(slugs_to_page_ids) <= 1:
+        print(
+            "Failed to build Worker Script - Unable to map slugs to individual post page IDs"
+        )
+        raise
 
     # Write each line of workerTemplate.js to resolvedWorker.js except when the
     # sentinel marker is hit, in which case a JS const `SLUGS_TO_PAGES` will be
     # written instead using the slugs_to_page_ids dictionary created above.
     resolve_worker_js_file(slugs_to_page_ids)
+
+    print("Successfully built the Worker Script.")
 
 
 if __name__ == "__main__":

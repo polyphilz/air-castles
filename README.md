@@ -18,45 +18,50 @@ associated slug appended to it (e.g. https://aircastles.xyz/day1).
 ## The Cloudflare Worker
 
 Cloudflare Workers are self-contained bits of JavaScript that run upon
-specific actions. For Air Castles, a single worker runs any time a request to
-the page is made. The worker extracts the contents from the actual Notion site,
-adds the slug support and makes some changes to the CSS/DOM, and republishes
-the modified contents on https://aircastles.xyz. This process is wicked fast;
-edits to the Air Castles Notion page usually appear on the live site in <= 1
-second.
+specific actions. For Air Castles, a single Worker runs any time a request to
+the page is made. At a high level, the Worker:
 
-The Cloudflare Worker requires a JS object containing a custom URL slug to
-Notion page ID mapping. Every time I create a new post (which, at the moment,
-is every single day), I'd have to create the post on the Notion page, get the
-Notion page ID, add the slug to Notion page ID mapping in the `SLUG_TO_PAGE`
+1. Extracts the contents from the actual Notion site
+2. Adds the URL slugs mapped to each post
+3. Makes small changes to the CSS/DOM
+4. Republishes the modified contents to https://aircastles.xyz
+
+This process is wicked fast: edits to the Air Castles Notion page usually
+appear on the live site in ~1 second or less.
+
+The Worker requires a JS object containing key-value pairs of custom URL slugs
+to Notion page IDs. Every time I create a new post (which, at the moment, is
+every single day), I'd have to create the post on the Notion page, get the
+Notion page ID, add the slug to Notion page ID mapping in the `SLUGS_TO_PAGES`
 JS object specified in the Worker script (e.g. `'day9': '<notion-page-id>'`),
 and then redeploy the Worker on the Cloudflare dashboard.
 
-That's way too much work, so I made a Python script that automates this...
+That's way too much work, so I made a few Python scripts that automates this.
 
-## The Python Script
+## The Python Scripts
 
 ### Building the Worker Script
 
-[`build_worker.py`](build-worker/build_worker/build_worker.py) does a few
-things:
+[`build_worker.py`](worker-utils/worker_utils/build_worker/build_worker.py)
+does a few things:
 
-- It uses the Notion API to read all the contents from the inline database
-contained in the main Air Castles Notion page
-- Using the JSON output from above, it generates a simple text file
-`slugs_to_pages.txt` containing a key-value mapping of custom slugs to Notion
-page IDs. For my use case, I was content with my custom slugs just being
-`/day1`, `/day2`, etc.
-- It reads in `workerTemplate.js` and replaces `SLUG_TO_PAGE` with the actual
-mappings contained in `slugs_to_pages.txt`; it then outputs this worker file
-into [`_out`](_out/) as `worker.js`
+- It uses the Notion API to gather all the posts from the inline database
+nested in the main Air Castles Notion page
+- An object mapping URL slugs to the Notion page IDs for each post gathered
+in the above step is created
+- It reads in [`workerTemplate.js`](worker/workerTemplate.js), copying each
+line over to [`resolvedWorker.js`](worker/resolvedWorker.js), except when it
+comes across a line in the template JS containing a sentinel marker:
+`/* ~+_insertion-marker_+~ */`. This line is replaced with a JavaScript const
+object containing the object mapping created in the above step
 
 ### Uploading the Worker Script
 
-`upload_worker.py` uses the Cloudflare API to upload the newly created worker
-script to Cloudflare.
+`upload_worker.py` uses the Cloudflare API to upload the newly created Worker
+script to my Cloudflare account.
 
 ## CLI
 
-I don't want to have to run both the build and upload worker scripts, so a
-command-line utility, `.deploy.sh`, was created to do this.
+I don't want to have to run both the build and upload scripts, so
+[`update-script.sh`](./update-script.sh) was created to do this for me. If the
+build script errors out for any reason, the upload script won't be run.

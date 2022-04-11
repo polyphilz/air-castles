@@ -12,12 +12,13 @@ def main():
             "X-Auth-Key": AUTH_KEY,
             "Content-Type": "application/javascript",
         }
-        res = requests.put(url, headers=headers, data=f.read())
 
-        if res.json()["success"]:
-            print("Worker Script successfully uploaded to Cloudflare.")
-        else:
+        res = requests.put(url, headers=headers, data=f.read())
+        if not res.json()["success"]:
             print("Worker Script failed to be uploaded to Cloudflare.")
+            raise
+
+        print("Worker Script successfully uploaded to Cloudflare.")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "build-worker"
+name = "worker-utils"
 version = "0.1.0"
-description = "Generates a Cloudflare Worker script and uploads it for aircastles.xyz."
+description = "Generates a Cloudflare Worker script and uploads it to Cloudflare for aircastles.xyz."
 authors = ["Rohan Bansal <rohanarunbansal@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -14,3 +14,7 @@ pytest = "^5.2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+bw = 'worker_utils.build_worker.build_worker:main'
+uw = 'worker_utils.upload_worker.upload_worker:main'

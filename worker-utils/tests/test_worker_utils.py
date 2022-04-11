@@ -1,4 +1,4 @@
-from build_worker import __version__
+from worker_utils import __version__
 
 
 def test_version():

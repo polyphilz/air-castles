@@ -1,5 +1,5 @@
 /*****************************/
-/* CONFIGURATION STARTS HERE */
+/* SIMPLE CONFIGURATION STARTS HERE */
 /*****************************/
 
 /* Step 1: Enter your custom domain name (e.g. aircastles.xyz). */
@@ -8,9 +8,7 @@ const MY_DOMAIN = "aircastles.xyz";
 /**
  * Step 2: Enter your URL slug to (without the slash) to Notion page ID mapping.
  */
-const SLUG_TO_PAGE = {
-  "": "840d969f1f064962a0d66f21228eae11",
-};
+/* ~+_insertion-marker_+~ */
 
 /* Step 3: Enter your page title and description for SEO purposes. */
 const PAGE_TITLE = "Air Castles";
@@ -26,14 +24,14 @@ const GOOGLE_FONT = "";
 const CUSTOM_SCRIPT = ``;
 
 /***************************/
-/* CONFIGURATION ENDS HERE */
+/* SIMPLE CONFIGURATION ENDS HERE */
 /***************************/
 
 const PAGE_TO_SLUG = {};
 const slugs = [];
 const pages = [];
-Object.keys(SLUG_TO_PAGE).forEach((slug) => {
-  const page = SLUG_TO_PAGE[slug];
+Object.keys(SLUGS_TO_PAGES).forEach((slug) => {
+  const page = SLUGS_TO_PAGES[slug];
   slugs.push(slug);
   pages.push(page);
   PAGE_TO_SLUG[page] = slug;
@@ -128,7 +126,7 @@ async function fetchAndApply(request) {
     response.headers.set("Access-Control-Allow-Origin", "*");
     return response;
   } else if (slugs.indexOf(url.pathname.slice(1)) > -1) {
-    const pageId = SLUG_TO_PAGE[url.pathname.slice(1)];
+    const pageId = SLUGS_TO_PAGES[url.pathname.slice(1)];
     return Response.redirect("https://" + MY_DOMAIN + "/" + pageId, 301);
   } else {
     response = await fetch(url.toString(), {
@@ -141,7 +139,7 @@ async function fetchAndApply(request) {
     response.headers.delete("X-Content-Security-Policy");
   }
 
-  return appendJavascript(response, SLUG_TO_PAGE);
+  return appendJavascript(response, SLUGS_TO_PAGES);
 }
 
 class MetaRewriter {
@@ -213,22 +211,22 @@ class HeadRewriter {
 }
 
 class BodyRewriter {
-  constructor(SLUG_TO_PAGE) {
-    this.SLUG_TO_PAGE = SLUG_TO_PAGE;
+  constructor(SLUGS_TO_PAGES) {
+    this.SLUGS_TO_PAGES = SLUGS_TO_PAGES;
   }
 
   element(element) {
     element.append(
       `<script>
     window.CONFIG.domainBaseUrl = location.origin;
-    const SLUG_TO_PAGE = ${JSON.stringify(this.SLUG_TO_PAGE)};
+    const SLUGS_TO_PAGES = ${JSON.stringify(this.SLUGS_TO_PAGES)};
     const PAGE_TO_SLUG = {};
     const slugs = [];
     const pages = [];
     const el = document.createElement('div');
     let redirected = false;
-    Object.keys(SLUG_TO_PAGE).forEach(slug => {
-      const page = SLUG_TO_PAGE[slug];
+    Object.keys(SLUGS_TO_PAGES).forEach(slug => {
+      const page = SLUGS_TO_PAGES[slug];
       slugs.push(slug);
       pages.push(page);
       PAGE_TO_SLUG[page] = slug;
@@ -297,7 +295,7 @@ class BodyRewriter {
         const onpopstate = window.onpopstate;
         window.onpopstate = function() {
           if (slugs.includes(getSlug())) {
-            const page = SLUG_TO_PAGE[getSlug()];
+            const page = SLUGS_TO_PAGES[getSlug()];
             if (page) {
               history.replaceState(history.state, 'bypass', '/' + page);
             }
@@ -342,11 +340,11 @@ class BodyRewriter {
   }
 }
 
-async function appendJavascript(res, SLUG_TO_PAGE) {
+async function appendJavascript(res, SLUGS_TO_PAGES) {
   return new HTMLRewriter()
     .on("title", new MetaRewriter())
     .on("meta", new MetaRewriter())
     .on("head", new HeadRewriter())
-    .on("body", new BodyRewriter(SLUG_TO_PAGE))
+    .on("body", new BodyRewriter(SLUGS_TO_PAGES))
     .transform(res);
 }

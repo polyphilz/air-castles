@@ -1,5 +1,6 @@
 #!/bin/sh
-cd worker-utils
+cwd=$(pwd)
+cd ~/projects/air-castles/worker-utils
 
 if poetry run bw; then
   if poetry run uw; then
@@ -11,4 +12,4 @@ else
     echo "Exit code $?: Failed to build Worker Script."
 fi
 
-cd ../
+cd $cwd

@@ -10,6 +10,14 @@ from ..secrets.notion import (
 )
 
 
+class NotionAPIDatabaseQueryFailure(Exception):
+    pass
+
+
+class SlugToPageIdMappingFailure(Exception):
+    pass
+
+
 def get_posts():
     """Queries the Air Castles Notion page inline database for all posts.
 
@@ -88,19 +96,19 @@ def resolve_worker_js_file(slugs_to_page_ids):
 def main():
     # Get all posts
     posts = get_posts()
-    if not posts:
-        print("Failed to build Worker Script - Notion API database query error")
-        raise
+    if posts["object"] == "error":
+        raise NotionAPIDatabaseQueryFailure(
+            "Failed to build Worker Script - Notion API database query error."
+        )
 
     # Create the URL slug to Notion page ID mappings for each post
     slugs_to_page_ids = create_slugs_to_page_ids_dict(posts["results"])
     # If this dictionary only has the base slug, then the assumption is that
     # something went wrong (because there should always be posts)
     if len(slugs_to_page_ids) <= 1:
-        print(
-            "Failed to build Worker Script - Unable to map slugs to individual post page IDs"
+        raise SlugToPageIdMappingFailure(
+            "Failed to build Worker Script - Unable to map slugs to individual post page IDs."
         )
-        raise
 
     # Write each line of workerTemplate.js to resolvedWorker.js except when the
     # sentinel marker is hit, in which case a JS const `SLUGS_TO_PAGES` will be

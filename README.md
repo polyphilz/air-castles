@@ -36,7 +36,7 @@ Notion page ID, add the slug to Notion page ID mapping in the `SLUGS_TO_PAGES`
 JS object specified in the Worker script (e.g. `'day9': '<notion-page-id>'`),
 and then redeploy the Worker on the Cloudflare dashboard.
 
-That's way too much work, so I made a few Python scripts that automates this.
+That's way too much work, so I made a few Python scripts that automate this.
 
 ## The Python Scripts
 

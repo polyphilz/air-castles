@@ -10,7 +10,7 @@ from ..secrets.notion import (
 )
 
 
-class NotionAPIDatabaseQueryFailure(Exception):
+class NotionApiDatabaseQueryFailure(Exception):
     pass
 
 
@@ -97,7 +97,7 @@ def main():
     # Get all posts
     posts = get_posts()
     if posts["object"] == "error":
-        raise NotionAPIDatabaseQueryFailure(
+        raise NotionApiDatabaseQueryFailure(
             "Failed to build Worker Script - Notion API database query error."
         )
 
